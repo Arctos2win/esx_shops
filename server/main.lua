@@ -1,53 +1,45 @@
 function GetItemFromShop(itemName, zone)
-	local zoneItems = Config.Zones[zone].Items
-	local item = nil
+    local zoneItems = Config.Zones[zone].Items
 
-	for _, itemData in pairs(zoneItems) do
-		if itemData.name == itemName then
-			item = itemData
-			break
-		end
-	end
-
-	if not item then
-		return false
-	end
-
-	return true,item.price, item.label
+    for _, item in pairs(zoneItems) do
+        if item.name == itemName then
+            return true, item.price, item.name
+        end
+    end
 end
 
-RegisterServerEvent('esx_shops:buyItem')
-AddEventHandler('esx_shops:buyItem', function(itemName, amount, zone)
-	local source = source
-	local xPlayer = ESX.GetPlayerFromId(source)
-	local Exists, price, label = GetItemFromShop(itemName, zone)
-	amount = ESX.Math.Round(amount)
+RegisterNetEvent("esx_shops:buyItem", function(itemName, amount, zone)
+    local source = source
+    local xPlayer = ESX.GetPlayerFromId(source)
+    if not xPlayer then return end
 
-	if amount < 0 then
-		print(('[^3WARNING^7] Player ^5%s^7 attempted to exploit the shop!'):format(source))
-		return
-	end
+    local exists, price, name = GetItemFromShop(itemName, zone)
 
-	if not Exists then
-		print(('[^3WARNING^7] Player ^5%s^7 attempted to exploit the shop!'):format(source))
-		return
-	end
+    if not exists then
+        return print(('[^3WARNING^7] Player ^5%s^7 attempted to exploit the shop!'):format(source))
+    end
 
-	if Exists then
-		price = price * amount
-		-- can the player afford this item?
-		if xPlayer.getMoney() >= price then
-			-- can the player carry the said amount of x item?
-			if xPlayer.canCarryItem(itemName, amount) then
-				xPlayer.removeMoney(price, label .. " " .. TranslateCap('purchase'))
-				xPlayer.addInventoryItem(itemName, amount)
-				xPlayer.showNotification(TranslateCap('bought', amount, label, ESX.Math.GroupDigits(price)))
-			else
-				xPlayer.showNotification(TranslateCap('player_cannot_hold'))
-			end
-		else
-			local missingMoney = price - xPlayer.getMoney()
-			xPlayer.showNotification(TranslateCap('not_enough', ESX.Math.GroupDigits(missingMoney)))
-		end
-	end
+    if amount < 0 then
+        return print(('[^3WARNING^7] Player ^5%s^7 attempted to exploit the shop!'):format(source))
+    end
+
+    price *= amount
+
+    print(amount)
+    if not xPlayer.canCarryItem(name, amount) then
+        return xPlayer.showNotification(TranslateCap('player_cannot_hold'))
+    end
+
+    for _, account in ipairs(Config.PaymenthAccounts) do
+        local account = xPlayer.getAccount(account)
+
+        if account.money >= price then
+            xPlayer.removeAccountMoney(account.name, price, ("%s %s"):format(name, TranslateCap('purchase')))
+            xPlayer.addInventoryItem(name, amount)
+            return xPlayer.showNotification(TranslateCap('bought', amount, name, ESX.Math.GroupDigits(price)))
+        end
+    end
+
+    local missingMoney = price - xPlayer.getMoney()
+    xPlayer.showNotification(TranslateCap('not_enough', ESX.Math.GroupDigits(missingMoney)))
 end)
