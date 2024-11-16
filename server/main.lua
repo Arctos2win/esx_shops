@@ -8,6 +8,14 @@ function GetItemFromShop(itemName, zone)
     end
 end
 
+function PlayerPosCheck(playerCoords, zone) 
+    for _, pos in ipairs(Config.Zones[zone].Pos) do 
+        if #(playerCoords - pos) < 5.0 then 
+            return true 
+        end 
+    end
+end
+
 RegisterNetEvent("esx_shops:buyItem", function(itemName, amount, zone)
     local source = source
     local xPlayer = ESX.GetPlayerFromId(source)
@@ -19,13 +27,12 @@ RegisterNetEvent("esx_shops:buyItem", function(itemName, amount, zone)
         return print(('[^3WARNING^7] Player ^5%s^7 attempted to exploit the shop!'):format(source))
     end
 
-    if amount < 0 then
+    if amount < 0 or not PlayerPosCheck(xPlayer.getCoords(true), zone) then
         return print(('[^3WARNING^7] Player ^5%s^7 attempted to exploit the shop!'):format(source))
     end
 
     price *= amount
-
-    print(amount)
+    
     if not xPlayer.canCarryItem(name, amount) then
         return xPlayer.showNotification(TranslateCap('player_cannot_hold'))
     end

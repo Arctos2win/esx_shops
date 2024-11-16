@@ -1,4 +1,4 @@
-local nearZone, TextUI, inMenu
+local currentZone, TextUI, inMenu
 local function openShopMenu(zone)
     if not Config.Zones[zone] then return end
     local elements = {}
@@ -20,11 +20,11 @@ local function openShopMenu(zone)
         align = Config.MenuAlign,
         elements = elements
     }, function(data, menu)
-        if not nearZone then 
+        if not currentZone then 
             return menu.close() 
         end 
 
-        TriggerServerEvent("esx_shops:buyItem", data.current.name, data.current.value, zone)
+        TriggerServerEvent("esx_shops:buyItem", data.current.name, data.current.value, currentZone)
     end, function(data, menu)
         inMenu = false
         menu.close()
@@ -63,13 +63,20 @@ function createShopPoint(pos, zone, ShowMarker)
                     Config.MarkerColor.b, 100, false, true, 2, false, nil, nil, false)
             end
 
-            nearZone = point.currDistance < Config.MarkerSize.x and zone
-            if nearZone and not inMenu and not TextUI then
+            currentZone = point.currDistance < Config.MarkerSize.x and zone
+            if currentZone and not inMenu and not TextUI then
                 TextUI = true
                 ESX.TextUI(Translate("press_menu", ESX.GetInteractKey()))  
-            elseif (not nearZone or inMenu) and TextUI then
-                ESX.HideUI()
-                TextUI = false
+            elseif (not currentZone or inMenu) then
+                if not currentZone and inMenu then
+                    ESX.UI.Menu.Close("default", GetCurrentResourceName(), "SHOP_MENU")    
+                    inMenu = false
+                end
+
+                if TextUI then 
+                    ESX.HideUI()
+                    TextUI = false
+                end
             end
         end
     })
@@ -86,7 +93,7 @@ CreateThread(function()
 end)
 
 ESX.RegisterInteraction("shop_menu", function()
-    openShopMenu(nearZone)
+    openShopMenu(currentZone)
 end, function()
     return not inMenu
 end)
