@@ -37,7 +37,7 @@ RegisterNetEvent("esx_shops:buyItem", function(itemName, amount, zone)
         return xPlayer.showNotification(TranslateCap('player_cannot_hold'))
     end
 
-    for _, account in ipairs(Config.PaymenthAccounts) do
+    for _, account in ipairs(Config.PaymentAccounts) do
         local account = xPlayer.getAccount(account)
 
         if account.money >= price then

@@ -6,10 +6,14 @@ Config.MarkerColor = { r = 50, g = 200, b = 50, a = 200 }
 Config.Locale = GetConvar('esx:locale', 'en')
 
 -- Accounts that can be used for paymenth 
-Config.PaymenthAccounts = {"money", "bank"}
+Config.PaymentAccounts = {"money", "bank"}
 
 -- Alignment of the menu 
 Config.MenuAlign = "right" 
+Config.QuantityRange = {
+    Min = 1, 
+    Max = 10
+}
 
 -- Zones
 Config.Zones = {

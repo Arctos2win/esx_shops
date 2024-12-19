@@ -9,6 +9,7 @@ version '1.2'
 shared_script '@es_extended/imports.lua'
 
 client_scripts {
+	'@es_extended/imports/point.lua',
 	'@es_extended/locale.lua',
 	'locales/*.lua',
 	'config.lua',

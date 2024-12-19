@@ -1,4 +1,4 @@
-local currentZone, TextUI, inMenu
+local currentZone, textUi, inMenu
 local function openShopMenu(zone)
     if not Config.Zones[zone] then return end
     local elements = {}
@@ -9,8 +9,8 @@ local function openShopMenu(zone)
             name = item.name,
             value = 1,
             type = "slider",
-            min = 1,
-            max = 10
+            min = Config.QuantityRange.Min,
+            max = Config.QuantityRange.Max
         }
     end
 
@@ -46,8 +46,8 @@ function AddShopBlip(pos, settings)
     EndTextCommandSetBlipName(blip)
 end
 
-function createShopPoint(pos, zone, ShowMarker)
-    ESX.Point:new({
+function createShopPoint(pos, zone, showMarker)
+    Point:constructor({
         coords = pos,
         distance = Config.DrawDistance,
         enter = function()
@@ -57,43 +57,41 @@ function createShopPoint(pos, zone, ShowMarker)
         end,            
 
         inside = function(point)
-            if ShowMarker then
+            if showMarker then
                 DrawMarker(Config.MarkerType, point.coords.x, point.coords.y, point.coords.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Config.MarkerSize.x,
                     Config.MarkerSize.y, Config.MarkerSize.z, Config.MarkerColor.r, Config.MarkerColor.g,
                     Config.MarkerColor.b, 100, false, true, 2, false, nil, nil, false)
             end
 
             currentZone = point.currDistance < Config.MarkerSize.x and zone
-            if currentZone and not inMenu and not TextUI then
-                TextUI = true
-                ESX.TextUI(Translate("press_menu", ESX.GetInteractKey()))  
+            if currentZone and not inMenu and not textUi then
+                textUi = true
+                ESX.textUi(Translate("press_menu", ESX.GetInteractKey()))  
             elseif (not currentZone or inMenu) then
                 if not currentZone and inMenu then
                     ESX.UI.Menu.Close("default", GetCurrentResourceName(), "SHOP_MENU")    
                     inMenu = false
                 end
 
-                if TextUI then 
+                if textUi then 
                     ESX.HideUI()
-                    TextUI = false
+                    textUi = false
                 end
             end
         end
     })
 end
 
-CreateThread(function()
-    for zone, v in pairs(Config.Zones) do
-        for i = 1, #v.Pos, 1 do
-            local pos = v.Pos[i]
-            AddShopBlip(pos, v)
-            createShopPoint(pos, zone, v.ShowMarker) 
-        end
-    end
-end)
-
 ESX.RegisterInteraction("shop_menu", function()
     openShopMenu(currentZone)
 end, function()
     return not inMenu
 end)
+
+for zone, v in pairs(Config.Zones) do
+    for i = 1, #v.Pos, 1 do
+        local pos = v.Pos[i]
+        AddShopBlip(pos, v)
+        createShopPoint(pos, zone, v.ShowMarker) 
+    end
+end
